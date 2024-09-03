@@ -1,6 +1,6 @@
 # C Lib Require
 
-This library defines the macros `require(expression)`, `TRY`, and `CATCH(requirement_err)`. The `require` macro is similar to `assert` from `glibc`. However, if the expression evaluates to `false`, `longjmp` is called instead of `abort`. This allows C programmers to `CATCH` the `requirement_err` when a requirement is not met. If there is no destination to jump to (i.e `require` is used outside of a `TRY` block), `require(expression)` behaves in the same way as `assert(expression)`; it calles `abort`. See the files in `tests/` for code examples, and `src/require.h` for the definition of the `requirement_error` struct.
+This library defines the macros `require(expression)`, `try`, and `catch(requirement_err)`. The `require` macro is similar to `assert` from `glibc`. However, if the expression evaluates to `false`, `longjmp` is called instead of `abort`. This allows C programmers to `catch` the `requirement_err` when a requirement is not met. If there is no destination to jump to (i.e `require` is used outside of a `try` block), `require(expression)` behaves in the same way as `assert(expression)`; it calles `abort`. See the files in `tests/` for code examples, and `src/require.h` for the definition of the `requirement_error` struct.
 
 ## Installation
 
@@ -21,7 +21,7 @@ make test_require test_try_catch
 
 ## Usage
 
-Include the header file in your C code, and use the `require(expr)`, `TRY` and `CATCH(requirement_err)` macros. For example:
+Include the header file in your C code, and use the `require(expr)`, `try` and `catch(requirement_err)` macros. For example:
 
 ```C
 #include <require.h>
@@ -30,9 +30,9 @@ Include the header file in your C code, and use the `require(expr)`, `TRY` and `
 
 int main(void) {
   require(true);
-  TRY {
+  try {
     require(false);
-  } CATCH(requirement_err) {
+  } catch(requirement_err) {
     printf("%s", requirement_err.msg);
   }
   return 0;

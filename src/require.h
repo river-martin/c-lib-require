@@ -34,9 +34,9 @@ extern void __require_fail(const char  *__requirement,
     ((expr) ? __REQUIRE_VOID_CAST(0) \
             : __require_fail(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__))
 
-// Usage: TRY { ... } CATCH(requirement_err) { ... }
-#define TRY                    if ((__jmp_env_set_count++, setjmp(jmp_env)) == 0)
-// Usage: TRY { ... } CATCH(requirement_err) { ... }
-#define CATCH(requirement_err) else if ((__jmp_env_set_count--, true))
+// Usage: try { ... } catch(requirement_err) { ... }
+#define try                    if ((__jmp_env_set_count++, setjmp(jmp_env)) == 0)
+// Usage: try { ... } catch(requirement_err) { ... }
+#define catch(requirement_err) else if ((__jmp_env_set_count--, true))
 
 #endif // _REQUIRE_H

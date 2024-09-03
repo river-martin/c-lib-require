@@ -11,10 +11,10 @@ void something_that_wont_fail(void) { require(("this will pass", 1 == 1)); }
 int main(void)
 {
     assert(("this will pass", 1 == 1));
-    TRY {
+    try {
         something_that_wont_fail();
         something_that_will_fail();
-    } CATCH(requirement_err) {
+    } catch(requirement_err) {
         printf("%s", requirement_err.msg);
     }
     return EXIT_SUCCESS;
