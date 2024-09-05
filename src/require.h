@@ -1,6 +1,7 @@
 #ifndef _REQUIRE_H
 #define _REQUIRE_H
 
+#include "trycatcherror.h"
 #include <assert.h>
 #include <setjmp.h>
 #include <stdbool.h>
@@ -9,34 +10,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_ERR_MSG_LEN 256
-
-struct requirement_error {
-    const char  *requirement;
-    const char  *file;
-    unsigned int line;
-    const char  *function;
-    char         msg[MAX_ERR_MSG_LEN];
-};
-
-extern struct requirement_error requirement_err;
-extern jmp_buf          jmp_env;
-extern int              __jmp_env_set_count;
-
-extern void __require_fail(const char  *__requirement,
-                           const char  *__file,
-                           unsigned int __line,
-                           const char  *__function);
-
 #define __REQUIRE_VOID_CAST (void)
 
+/**
+ * @brief Require that the given expression evaluates to true. If the expression
+ * evaluates to false, throw a `RequirementError` (if in a `try` block) or print
+ * the error message to `stderr` and call `abort` (if not in a a `try` block).
+ */
 #define require(expr)                \
     ((expr) ? __REQUIRE_VOID_CAST(0) \
             : __require_fail(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__))
 
-// Usage: try { ... } catch(requirement_err) { ... }
-#define try                    if ((__jmp_env_set_count++, setjmp(jmp_env)) == 0)
-// Usage: try { ... } catch(requirement_err) { ... }
-#define catch(requirement_err) else if ((__jmp_env_set_count--, true))
+/**
+ * @brief The error type used when a requirement is not met.
+ */
+extern const ErrType REQ_ERR_TYPE;
+
+/**
+ * @brief This function, when passed a string containing an asserted/required
+ * expression, a filename, a line number, and function name, creates a
+ * `RequirementError` with of the form:
+ *
+ * ```a.c:10: foobar: Requirement 'a == b' not met.```
+ *
+ * If called from inside a `try` block, it then throws the error. If called from
+ * outside a `try` block, it prints the error message to `stderr` and calls
+ * `abort`.
+ */
+extern void __require_fail(const char  *__requirement,
+                           const char  *__file,
+                           unsigned int __line,
+                           const char  *__function);
 
 #endif // _REQUIRE_H
