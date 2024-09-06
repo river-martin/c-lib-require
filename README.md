@@ -1,6 +1,6 @@
-# C Lib Require
+# c-lib-require
 
-This library defines the macros `require(expression)`, `try`, and `catch(requirement_err)`. The `require` macro is similar to `assert` from `glibc`. However, if the expression evaluates to `false`, `longjmp` is called instead of `abort`. This allows C programmers to `catch` the `requirement_err` when a requirement is not met. If there is no destination to jump to (i.e `require` is used outside of a `try` block), `require(expression)` behaves in the same way as `assert(expression)`; it calles `abort`. See the files in `tests/` for code examples, and `src/require.h` for the definition of the `requirement_error` struct.
+This library defines the macro `require(expression)` and the type `RequirementError`. The `require` macro is similar to `assert` from `glibc`. However, if the expression evaluates to `false`, a `RequirementError` is thrown (using the `throw` macro defined in `trycatch.h`) instead of calling `abort`.
 
 ## Installation
 
@@ -14,9 +14,8 @@ To uninstall the library, run: `sudo make uninstall`.
 ## Testing
 
 ```Bash
-make test_require test_try_catch
+make tests
 ./test_require
-./test_try_catch
 ```
 
 ## Usage
