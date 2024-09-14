@@ -14,69 +14,60 @@ DFLAGS    ?= # -DDEBUG
 
 # linker flags
 
-LDFLAGS := $(ASAN_FLAGS) -ltrycatch -lstack
+LDFLAGS := $(ASAN_FLAGS) -L. -lrequire
 
 # commands
 
 COMPILE:=$(CC) $(CFLAGS) $(DFLAGS)
 
+# files
+
+CODE_FILES := $(wildcard src/*.c src/*.h tests/*.c tests/*.h)
+SRC_OBJ_FILES := $(patsubst src/%.c, build/src/%.o, $(wildcard src/*.c))
 # targets
 
-lib: build/librequire.a
+librequire.a: $(SRC_OBJ_FILES) dep-objs
+	ar rcs librequire.a $(SRC_OBJ_FILES) $(wildcard build/dep-objs/*.o)
+	ar t librequire.a
 
-tests: build $(ALL_OBJ_FILES) test_require
+dep-objs: | build
+	$(MAKE) -C c-lib-trycatch libtrycatch.a
+	ar x c-lib-trycatch/libtrycatch.a --output build/dep-objs
 
-SRC_C_FILES := $(wildcard src/*.c)
-SRC_OBJ_FILES := $(patsubst src/%.c, build/src/%.o, $(SRC_C_FILES))
-
-TESTS_C_FILES := $(wildcard tests/*.c)
-TESTS_H_FILES := $(wildcard tests/*.h)
-TESTS_OBJ_FILES := $(patsubst tests/%.c, build/tests/%.o, $(TESTS_C_FILES))
-
-ALL_C_FILES := $(SRC_C_FILES) $(TESTS_C_FILES)
-ALL_H_FILES := $(SRC_H_FILES) $(TESTS_H_FILES)
-ALL_OBJ_FILES := $(SRC_OBJ_FILES) $(TESTS_OBJ_FILES)
-
-ALL_CODE_FILES := $(ALL_C_FILES) $(ALL_H_FILES)
-# target files
-
-build/librequire.a: $(SRC_OBJ_FILES) | build
-	ar rcs build/librequire.a $(SRC_OBJ_FILES)
-
-build/src/%.o: src/%.c $(SRC_C_FILES) $(SRC_H_FILES) | build
+build/src/%.o: src/%.c $(CODE_FILES) | build
 	$(COMPILE) -c -o $@ $<
 
-build/tests/%.o: tests/%.c $(TESTS_C_FILES) $(TESTS_H_FILES) | build
+build/tests/%.o: tests/%.c $(CODE_FILES) | build
 	$(COMPILE) -c -o $@ $<
 
-test_require:
-	$(COMPILE) -o $@ tests/test_require.c $(LDFLAGS) -lrequire -ltrycatch
+test_require: librequire.a | build
+	$(COMPILE) -o $@ tests/test_require.c $(LDFLAGS)
+
+tests: test_require
 
 # target directories
 
 build:
-	mkdir -p build
+	mkdir -p build/dep-objs
 	mkdir -p build/src
 	mkdir -p build/tests
 
 # phony targets
 
-install: build/librequire.a src/require.h src/requirement_error.h
+install: librequire.a src/require.h src/requirement_error.h
 	install -d /usr/local/lib /usr/local/include
 	# Octal permissions: 6 = rw-, 4 = r--
-	install -m 644 build/librequire.a /usr/local/lib
+	install -m 644 librequire.a /usr/local/lib
 	install -m 644 src/require.h /usr/local/include
 	install -m 644 src/requirement_error.h /usr/local/include
 
 uninstall:
 	rm -f /usr/local/lib/librequire.a /usr/local/include/require.h
 
-
 clean:
 	rm -f test_require
-	rm -f build/src/*.o build/tests/*.o
-	rmdir build/src build/tests
-	rm -f build/*.a
-	rmdir build
+	rm -f librequire.a
+	rm -rf build
+	$(MAKE) -C c-lib-trycatch clean
 
-.PHONY: install uninstall clean tests lib
+.PHONY: install uninstall clean tests lib dep-objs
